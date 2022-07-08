@@ -42,7 +42,7 @@
         enable_vlans: yes
 
     - name: Add devices to Network
-      meraki_devices:
+      meraki_device:
         auth_key: "{{ auth_key }}"
         org_name: "{{ org_name }}"
         net_id: "{{ off_network.results.0.data.id }}"
