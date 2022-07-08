@@ -33,12 +33,6 @@
       loop: "{{ lookup('dict', devices, wantlist=True) }}"
       when: "'device-1' in item.key"
 
-    - name: Query rules for hub
-      meraki_mx_site_to_site_vpn:
-        auth_key: "{{ auth_key }}"
-        org_name: "{{ org_name }}"
-        state: query
-
     - name: Enable VLANs on a network
       meraki_network:
         auth_key: "{{ auth_key }}"
@@ -48,7 +42,7 @@
         enable_vlans: yes
 
     - name: Add devices to Network
-      meraki_device:
+      meraki_devices:
         auth_key: "{{ auth_key }}"
         org_name: "{{ org_name }}"
         net_id: "{{ off_network.results.0.data.id }}"
