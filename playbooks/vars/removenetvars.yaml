@@ -1,0 +1,10 @@
+# BEGIN ANSIBLE MANAGED BLOCK
+device-1:
+    network_name: LAB-CX-DC-DMZ
+device-2:
+    network_name: LAB-CX-Branch-1
+device-3:
+    network_name: LAB-CX-Branch-2
+device-4:
+    network_name: LAB-CX-DC-Site-1
+# END ANSIBLE MANAGED BLOCK

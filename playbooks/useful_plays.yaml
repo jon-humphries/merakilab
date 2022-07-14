@@ -1,0 +1,134 @@
+    # - name: Get all networks within the Lab Org
+    #   uri:
+    #     url: https://api.meraki.com/api/v1/organizations/723390690146386998/networks
+    #     method: GET
+    #     return_content: yes
+    #     status_code: 200
+    #     body_format: json
+    #     headers:
+    #       Content-Type: application/json
+    #       Accept: application/json
+    #       X-Cisco-Meraki-API-Key: "{{ auth_key }}"
+    #     return_content: true
+    #     follow_redirects: all
+    #     validate_certs: true
+    #   register: meraki_networks
+    
+    # - name: Show nets
+    #   ansible.builtin.debug: var=meraki_networks
+
+        # - name: Show nets
+    #   ansible.builtin.set_fact:
+    #     nicetoyaml: "{{ networks | to_nice_yaml | indent(4, false) }}"
+    #   register: shownet
+
+    # - name: Show Json
+    #   ansible.builtin.debug: var=shownet
+
+
+        # - name: Print phone records
+    #   ansible.builtin.debug:
+    #     msg: "{{ item.key }} : {{ item.value }})"
+    #   loop: "{{ lookup('ansible.builtin.dict', networks) }}"
+
+     # Jinja2 Template To create dynamic vars file based on JSON Get from Meraki Dashboard
+    # - name: Writing vars to file yaml
+    #   ansible.builtin.blockinfile:
+    #     path: vars/netvars.yaml
+    #     create: yes
+    #     backup: yes
+    #     marker: "# {mark} ANSIBLE MANAGED BLOCK Network IDs"
+    #     block: |
+    #       {% for a in meraki_net_id  %}{% for b in meraki_network_names %}
+    #          net_id: {{ a }}
+    #          net_name: {{ b }}
+    #       {% endfor %}{% endfor %}
+
+    # - name: Writing netid vars to file yaml
+    #   ansible.builtin.blockinfile:
+    #     include_vars:
+    #     file: netvars.yaml
+    #     name: netvars
+    #     path: vars/netvars.yaml
+    #     block: |
+    #         {% for a in meraki_network_id if 'device-'{{loop.index}} in netvars -%}
+    #           net_id: {{ entry }}
+    #         {%- endfor %}
+
+        # - name: Grab the Network IDs
+    #   set_fact:
+    #      network_ids: "{{ item.id }} | {{ item.name }}"
+    #   loop: "{{ meraki_networks.json }}"
+
+    # - name: Create Dict of Json Objects
+    #   set_fact:
+    #     input: "{{ lookup(meraki_networks.json) | from_json }}"
+
+        # - name: Save the lookup value stored in a variable in a file for comparison
+    #   copy: content="{{ input }}" dest=./from_lookup_with_from_json.txt
+
+        # - name: Grab the Network IDs
+    #   set_fact:
+    #     network_ids: "{{ meraki_networks.json | json_query(jmesquery)}}"
+    #   vars:
+    #     jmesquery: "[*].[id,name]"
+
+     # - name: Writing netid vars to file yaml
+    #   ansible.builtin.blockinfile:
+    #     path: vars/netvars.yaml
+    #     create: yes
+    #     block: "{{ lookup('template', 'templates/meraki_net_id.j2') }}"
+
+    # - copy:
+    #     content: >-
+    #       {{ '---' }}
+          
+    #       {% for dict_item in meraki_net_id %}
+    #             Device-{{loop.index}}:
+    #         {% for key, value in dict_item.items() %}
+    #               {{key}}: {{value}}
+    #         {% endfor %}
+    #       {% endfor %}
+    #     dest: netvars.yaml
+
+    # - copy:
+    #     content: >-
+    #       {{
+    #         networks.data
+    #         | to_json
+    #         | from_json
+    #         | json_query('[*].{Name: name, Org_ID: organization_id, ID: id }')
+    #         | to_nice_yaml
+    #       }}
+    #     dest: netvars.yaml
+
+#  # Jinja2 Template To create dynamic vars file based on JSON Get from Meraki Dashboard
+    # - name: Writing vars to file yaml
+    #   vars:
+    #     quote: None
+    #     allow: True
+    #   ansible.builtin.blockinfile:
+    #     path: vars/netvars.yaml
+    #     create: yes
+    #     backup: no
+    #     block: |
+    #         ---
+    #         {{ networks.data
+    #         | to_json
+    #         | from_json
+    #         | json_query('[*].{Name: name, Org_ID: organization_id, ID: id }')
+    #         | to_nice_yaml
+    #         }}
+
+ # Jinja2 Template To create dynamic vars file based on JSON Get from Meraki Dashboard
+    # - name: Writing vars to file yaml
+    #   ansible.builtin.blockinfile:
+    #     path: vars/netvars.yaml
+    #     create: yes
+    #     backup: no
+
+    #     block: |
+    #       {% for b in meraki_network_names %}
+    #          net_id: {{ b }}
+    #          net_name: {{ b }}
+    #       {% endfor %}

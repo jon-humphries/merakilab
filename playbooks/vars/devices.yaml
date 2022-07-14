@@ -1,0 +1,55 @@
+---
+
+ device-1:
+    network_name: LAB-CX-DC-DMZ
+    device_name: LAB-CX-HUB-PRIMARY
+    device_type: MX64
+    serial_no: Q2KN-P533-6CVK
+
+ device-2:
+    network_name: LAB-CX-DC-DMZ
+    device_name: LAB-CX-HUB-SPARE
+    device_type: MX64
+    serial_no: Q2KN-GGBH-8PK8
+
+ device-3:
+    network_name: LAB-CX-Branch-1
+    device_name: LAB-CX-Branch-1-MX01
+    device_type: MX64
+    serial_no: Q2MN-9RBN-5ZU2
+
+ device-4:
+    network_name: LAB-CX-Branch-1
+    device_name: LAB-CX-Branch-1-MS01
+    device_type: MS220-8P
+    serial_no: Q2HP-4GZH-4ZCC
+
+ device-5:
+    network_name: LAB-CX-Branch-1
+    device_name: LAB-CX-Branch-1-AP01
+    device_type: MR34
+    serial_no: Q2FD-UFGD-HHGR
+
+ device-6:
+    network_name: LAB-CX-Branch-1
+    device_name: LAB-CX-Branch-1-AP02
+    device_type: MR34
+    serial_no: Q2FD-F548-7T2H
+
+ device-7:
+    network_name: LAB-CX-Branch-2
+    device_name: LAB-CX-Branch-2-MX01
+    device_type: MX64
+    serial_no: Q2MN-2978-5FKA
+
+ device-8:
+    network_name: LAB-CX-DC-Site-1
+    device_name: LAB-CX-DC-Site1-MX01
+    device_type: MX64
+    serial_no: Q2KN-79LU-7UCZ
+
+
+
+
+
+

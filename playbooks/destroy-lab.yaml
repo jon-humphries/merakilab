@@ -1,0 +1,61 @@
+---
+- name: meraki deployment
+  hosts: localhost
+  vars:
+    auth_key: "{{ auth }}"
+    org_name: "{{ org }}"
+    net_work: "{{ net }}"
+
+  tasks:
+
+    - name: Get all networks associated with the organization
+      delegate_to: localhost
+      meraki_network:
+        org_name: "{{ org_name }}"
+        auth_key: "{{ auth_key }}"
+        state: query
+      register: networks
+
+    - name: Show nets
+      ansible.builtin.debug: var=networks
+
+    - name: Set network names
+      vars:
+        query: "[*].name"
+      ansible.builtin.set_fact: 
+        meraki_network_names:  "{{ networks.data | community.general.json_query(query) }}"
+
+# # | map('regex_replace', '^(.*)$', 'network_name:' + ', \\1') | join('\n') 
+#     - name: Show network_names
+#       ansible.builtin.debug: var=network_names
+
+ # Jinja2 Template To create dynamic vars file based on JSON Get from Meraki Dashboard
+    - name: Writing vars to file yaml
+      ansible.builtin.blockinfile:
+        path: vars/removenetvars.yaml
+        create: yes
+        block: |
+            {% for entry in meraki_network_names -%}
+                device-{{loop.index}}:
+                network_name: {{ entry }}
+            {% endfor %}
+
+    - name: include variables for devices
+      include_vars:
+        file: vars/removenetvars.yaml
+        name: removenetvars
+
+    - name: Remove site network
+      meraki_network:
+        auth_key: "{{ auth_key }}"
+        state: absent
+        org_name: "{{ org_name }}"
+        net_name: "{{ item.value.network_name }}"
+        type:
+          - switch
+          - appliance
+          - wireless
+      register: off_network
+      loop: "{{ lookup('dict', removenetvars, wantlist=True) }}"
+      # when: "'network_name' in item.key"
+

@@ -1,0 +1,167 @@
+---
+#if in doubt check the FQCN of the module or use the 
+- name: meraki deployment
+  hosts: localhost
+  vars:
+    auth_key: "{{ auth }}"
+    org_name: "{{ org }}"
+    net_work: "{{ net }}"
+  gather_facts: no
+
+  tasks:
+    # - name: Display facts 
+    #   ansible.builtin.debug:
+    #     var: ansible_facts
+    - name: include variables for devices
+      include_vars:
+        file: devices.yaml
+        name: devices
+
+    - name: include variables for addresses
+      include_vars:
+        file: addresses.yaml
+        name: addresses
+
+    - name: Create Lab Networks
+      cisco.meraki.meraki_network:
+        auth_key: "{{ auth_key }}"
+        state: present
+        org_name: "{{ org_name }}"
+        name: "{{ item.value.network_name }}"
+        type:
+          - switch
+          - appliance
+          - wireless
+      register: create_lab_net
+      loop: "{{ lookup('dict', devices, wantlist=True) }}"
+      when: "'device' in item.key"
+
+
+    - name: Get all networks associated with the organization
+      meraki_network:
+        org_name: "{{ org_name }}"
+        auth_key: "{{ auth_key }}"
+        state: query
+      register: networks
+
+    - name: Show nets
+      ansible.builtin.debug: var=networks
+
+    - name: Filter details from Meraki Networks
+      vars:
+        query: "[*].{Name: name, Org_ID: organization_id, ID: id}"
+      ansible.builtin.set_fact: 
+        meraki_net_id:  "{{ networks.data | community.general.json_query(query) }}"
+
+
+    - name: Create a new networkID yaml variable file
+      template:
+        src: templates/meraki_net_id.j2
+        dest: vars/netvars.yaml
+        mode: 0775
+
+   
+    - name: include variables for devices
+      include_vars:
+        file: vars/netvars.yaml
+        name: netvars
+    
+    - name: Fetch Meraki Dashboard Network ID of LAB-CX-DC-DMZ & Store in Var net_id
+      ansible.builtin.set_fact: 
+        dc_dmz_net_id: "{{ item.value.ID }}"
+      loop: "{{ lookup('dict', netvars, wantlist=True) }}"
+      when: >-
+         item.value.Name == 'LAB-CX-DC-DMZ'
+
+    - name: Show nets
+      ansible.builtin.debug: var=dc_dmz_net_id
+
+    - name: Add devices to Lab Networks
+      cisco.meraki.meraki_device:
+        auth_key: "{{ auth_key }}"
+        org_name: "{{ org_name }}"
+        net_name: "{{ item.value.network_name }}"
+        state: present
+        serial: "{{ item.value.serial_no }}"
+      register: add_devices
+      loop: "{{ lookup('dict', devices, wantlist=True) }}"
+      when: "'device' in item.key"
+
+    - name: Update device information within Lab Networks
+      cisco.meraki.meraki_device:
+        auth_key: "{{ auth_key }}"
+        org_name: "{{ org_name }}"
+        net_name: "{{ item.value.network_name }}"
+        state: present
+        serial: "{{ item.value.serial_no }}"
+        name: " {{ item.value.device_name }}"
+        move_map_marker: no
+      register: update_devices
+      loop: "{{ lookup('dict', devices, wantlist=True) }}"
+  
+  #set up Hub Warm Spare
+    - name: Setup Hub Warm Spare
+      uri:
+        url: 'https://api.meraki.com/api/v1/networks/{{ dc_dmz_net_id }}/appliance/warmSpare'
+        method: PUT
+        headers:
+          Content-Type: application/json
+          Accept: application/json
+          X-Cisco-Meraki-API-Key: "{{ auth_key }}"
+        return_content: true
+        follow_redirects: all
+        validate_certs: true
+        body_format: json
+        body: {
+            "enabled": true,
+            "spareSerial": "Q2KN-GGBH-8PK8",
+            "uplinkMode": "virtual",
+            "virtualIp1": "64.103.45.130",
+        }
+      register: set_warm_spare
+
+
+    - name: Set Passthrough on Head End
+      uri:
+        url: https://api.meraki.com/api/v1/networks/{{ dc_dmz_net_id }}/appliance/settings
+        method: PUT
+        headers:
+          Content-Type: application/json
+          Accept: application/json
+          X-Cisco-Meraki-API-Key: "{{ auth_key }}"
+        return_content: true
+        follow_redirects: all
+        validate_certs: true
+        body_format: json
+        body: {
+          "clientTrackingMethod": "MAC address",
+          "deploymentMode": "passthrough"
+        }
+      register: set_passthough
+
+    # - name: Show Passthrough
+    #   ansible.builtin.debug: var=set_passthough
+
+# set up meraki VPN 
+    - name: SET Hub on Head End
+      uri:
+        url: https://api.meraki.com/api/v1/networks/{{ dc_dmz_net_id }}/appliance/vpn/siteToSiteVpn
+        method: PUT
+        headers:
+          Content-Type: application/json
+          Accept: application/json
+          X-Cisco-Meraki-API-Key: "{{ auth_key }}"
+        return_content: true
+        follow_redirects: all
+        validate_certs: true
+        body_format: json
+        body: {
+            "mode": "hub",
+            "hubs": [],
+            "subnets": []
+        }
+      register: set_vpn_hub
+
+
+   
+    

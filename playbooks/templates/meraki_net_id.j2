@@ -1,0 +1,9 @@
+#jinja2:lstrip_blocks: True
+{{ '---' }}
+
+{% for dict_item in meraki_net_id %}
+Device-{{loop.index}}:
+    {% for key, value in dict_item.items() %}
+    {{key}}: {{value}}
+    {% endfor %}
+{% endfor %}
